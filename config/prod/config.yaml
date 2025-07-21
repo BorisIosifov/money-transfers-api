@@ -1,0 +1,8 @@
+port: 8080
+postgres:
+  host: localhost
+  port: 5432
+  user: money_transfers_user
+  password: money_transfers_password
+  dbname: money_transfers
+TelegramChatID: 60326313

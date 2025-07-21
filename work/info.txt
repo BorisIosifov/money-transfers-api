@@ -1,0 +1,8 @@
+create database money_transfers;
+create user money_transfers_user with encrypted password 'money_transfers_password';
+grant all privileges on database money_transfers to money_transfers_user;
+
+psql -h localhost -U money_transfers_user money_transfers
+
+go mod tidy -v
+go mod vendor -v
