@@ -28,7 +28,9 @@ package controller
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -45,12 +47,12 @@ import (
 	"goji.io/pat"
 
 	"github.com/BorisIosifov/money-transfers-api/model"
-	"github.com/jmoiron/sqlx"
+	"github.com/google/uuid"
 )
 
 type Controller struct {
 	Config     model.Config
-	DB         *sqlx.DB
+	DB         model.DBWrapper
 	NeedToStop chan bool
 }
 
@@ -86,13 +88,21 @@ func (ctrl Controller) Run() {
 			ctrl.CORS(w, r)
 
 			if r.Method != "OPTIONS" {
+				sessionID, err := ctrl.ManageSession(w, r)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					ctrl.PrintError(w, r, fmt.Errorf("Internal server Error: %s", err))
+					return
+				}
+				ctx := context.WithValue(r.Context(), "SessionID", sessionID)
+
 				b, err := io.ReadAll(r.Body)
 				if err != nil {
 					w.WriteHeader(http.StatusInternalServerError)
-					ctrl.PrintError(w, r, fmt.Errorf("Internal server Eeror: %s", err))
+					ctrl.PrintError(w, r, fmt.Errorf("Internal server Error: %s", err))
 					return
 				}
-				ctx := context.WithValue(r.Context(), "Body", b)
+				ctx = context.WithValue(r.Context(), "Body", b)
 
 				h.ServeHTTP(w, r.WithContext(ctx))
 			}
@@ -314,6 +324,61 @@ func (ctrl Controller) validateParams(w http.ResponseWriter, r *http.Request, pa
 	}
 
 	return result, true
+}
+
+func (ctrl Controller) ManageSession(w http.ResponseWriter, r *http.Request) (session model.Session, err error) {
+	var needCreateSession bool
+
+	sessionCookie, err := r.Cookie("SessionID")
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			needCreateSession = true
+		} else {
+			return session, err
+		}
+	} else {
+		session, err = model.GetSession(ctrl.DB, sessionCookie.Value)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				needCreateSession = true
+			} else {
+				return session, nil
+			}
+		}
+	}
+
+	if needCreateSession {
+		sessionID := uuid.New().String()
+
+		// Starting a transaction
+		tx := ctrl.DB.MustBegin()
+		defer tx.Rollback()
+
+		session = model.Session{SessionID: sessionID, Data: "{}"}
+		err := session.Create(tx)
+		if err != nil {
+			return session, err
+		}
+
+		err = tx.Commit()
+		if err != nil {
+			return session, err
+		}
+
+		cookie := http.Cookie{
+			Name:     "SessionID",
+			Value:    sessionID,
+			Path:     "/",
+			MaxAge:   356 * 24 * 3600,
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		}
+
+		http.SetCookie(w, &cookie)
+	}
+
+	return session, nil
 }
 
 // Dirty hack - unused types - just to make swagger to show correct types

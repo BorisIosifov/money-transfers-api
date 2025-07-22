@@ -24,10 +24,12 @@ func main() {
 		return
 	}
 
+	dbWrapper := model.DBWrapper{DB: db}
+
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGABRT)
 
-	ctrl := controller.Controller{Config: config, DB: db, NeedToStop: make(chan bool)}
+	ctrl := controller.Controller{Config: config, DB: dbWrapper, NeedToStop: make(chan bool)}
 
 	go func() {
 		sig := <-signals
