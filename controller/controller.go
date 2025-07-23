@@ -342,7 +342,7 @@ func (ctrl Controller) ManageSession(w http.ResponseWriter, r *http.Request) (se
 			if errors.Is(err, sql.ErrNoRows) {
 				needCreateSession = true
 			} else {
-				return session, nil
+				return session, err
 			}
 		}
 	}

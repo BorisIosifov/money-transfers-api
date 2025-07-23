@@ -42,7 +42,7 @@ CREATE TABLE public.users (
 
 CREATE TABLE public.sessions (
     session_id character varying DEFAULT ''::character varying NOT NULL PRIMARY KEY,
-    user_id integer DEFAULT 0 NOT NULL REFERENCES public.users(user_id),
+    user_id integer DEFAULT NULL REFERENCES public.users(user_id),
     data json DEFAULT '{}'::json NOT NULL,
     ctime timestamp without time zone DEFAULT now() NOT NULL
 );
@@ -75,7 +75,7 @@ CREATE TABLE public.accounts (
     country character varying DEFAULT ''::character varying NOT NULL,
     phone character varying DEFAULT ''::character varying NOT NULL,
     name character varying DEFAULT ''::character varying NOT NULL,
-    bank_id integer DEFAULT 0 NOT NULL REFERENCES public.banks(bank_id),
+    bank_id integer DEFAULT NULL REFERENCES public.banks(bank_id),
     ctime timestamp without time zone DEFAULT now() NOT NULL
 );
 
@@ -86,8 +86,8 @@ CREATE TABLE public.accounts (
 -- ctime
 
 CREATE TABLE public.users_accounts (
-    user_id integer DEFAULT 0 NOT NULL REFERENCES public.users(user_id),
-    account_id integer DEFAULT 0 NOT NULL REFERENCES public.accounts(account_id),
+    user_id integer DEFAULT NULL REFERENCES public.users(user_id),
+    account_id integer DEFAULT NULL REFERENCES public.accounts(account_id),
     ctime timestamp without time zone DEFAULT now() NOT NULL
 );
 
@@ -125,12 +125,12 @@ CREATE TABLE public.rates (
 
 CREATE TABLE public.requests (
     request_id SERIAL PRIMARY KEY,
-    user_id integer DEFAULT 0 NOT NULL REFERENCES public.users(user_id),
+    user_id integer DEFAULT NULL REFERENCES public.users(user_id),
     currency character varying DEFAULT ''::character varying NOT NULL,
-    rate_id integer DEFAULT 0 NOT NULL REFERENCES public.rates(rate_id),
+    rate_id integer DEFAULT NULL REFERENCES public.rates(rate_id),
     amount real DEFAULT 0 NOT NULL,
     country_to character varying DEFAULT ''::character varying NOT NULL,
-    account_to integer DEFAULT 0 NOT NULL REFERENCES public.accounts(account_id),
+    account_to integer DEFAULT NULL REFERENCES public.accounts(account_id),
     status integer DEFAULT 0 NOT NULL,
     ctime timestamp without time zone DEFAULT now() NOT NULL
 );
@@ -146,10 +146,10 @@ CREATE TABLE public.requests (
 
 CREATE TABLE public.transactions (
     transaction_id SERIAL PRIMARY KEY,
-    account_to integer DEFAULT 0 NOT NULL REFERENCES public.accounts(account_id),
-    request_from integer DEFAULT 0 NOT NULL REFERENCES public.requests(request_id),
-    request_to integer DEFAULT 0 NOT NULL REFERENCES public.requests(request_id),
-    status integer DEFAULT 0 NOT NULL,
+    account_to integer DEFAULT NULL REFERENCES public.accounts(account_id),
+    request_from integer DEFAULT NULL REFERENCES public.requests(request_id),
+    request_to integer DEFAULT NULL REFERENCES public.requests(request_id),
+    status integer DEFAULT NULL,
     ctime timestamp without time zone DEFAULT now() NOT NULL
 );
 
@@ -161,7 +161,7 @@ CREATE TABLE public.transactions (
 
 CREATE TABLE public.invoices (
     invoice_id SERIAL PRIMARY KEY,
-    transaction_id integer DEFAULT 0 NOT NULL REFERENCES public.transactions(transaction_id),
+    transaction_id integer DEFAULT NULL REFERENCES public.transactions(transaction_id),
     ctime timestamp without time zone DEFAULT now() NOT NULL
 );
 
@@ -176,10 +176,10 @@ CREATE TABLE public.invoices (
 
 CREATE TABLE public.messages (
     message_id SERIAL PRIMARY KEY,
-    user_from integer DEFAULT 0 NOT NULL REFERENCES public.users(user_id),
-    user_to integer DEFAULT 0 NOT NULL REFERENCES public.users(user_id),
-    type integer DEFAULT 0 NOT NULL,
-    transaction_id integer DEFAULT 0 NOT NULL REFERENCES public.transactions(transaction_id),
+    user_from integer DEFAULT NULL REFERENCES public.users(user_id),
+    user_to integer DEFAULT NULL REFERENCES public.users(user_id),
+    type integer DEFAULT NULL,
+    transaction_id integer DEFAULT NULL REFERENCES public.transactions(transaction_id),
     text text DEFAULT '' NOT NULL,
     ctime timestamp without time zone DEFAULT now() NOT NULL
 );

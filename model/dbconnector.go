@@ -38,7 +38,7 @@ func (db DBWrapper) MustBegin() TXWrapper {
 
 func (db DBWrapper) Get(dest interface{}, query string, args ...interface{}) error {
 	log.Printf("%s; values: %v", query, args)
-	return db.Get(dest, query, args...)
+	return db.DB.Get(dest, query, args...)
 }
 
 type TXWrapper struct {
