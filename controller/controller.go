@@ -71,6 +71,8 @@ func (ctrl Controller) Run() {
 	mux := goji.NewMux()
 	ctrl.handleFunc(mux, "GET", "/test", ctrl.TestPage)
 
+	ctrl.handleFunc(mux, "GET", "/public/rates", ctrl.GetPublicRates)
+
 	// ctrl.handleFunc(mux, "PUT", "/transport_area/:id", ctrl.PutTransportArea)
 
 	mux.Use(func(h http.Handler) http.Handler {
