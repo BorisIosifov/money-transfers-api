@@ -572,7 +572,7 @@ func (ctrl Controller) ChangePasswordByCode(w http.ResponseWriter, r *http.Reque
 	defer tx.Rollback()
 
 	// Change password
-	model.User{Email: input.Email, PasswordUncrypted: input.Password}.UpdatePassword(tx)
+	err = model.User{Email: input.Email, PasswordUncrypted: input.Password}.UpdatePassword(tx)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		ctrl.PrintError(w, r, fmt.Errorf("Internal server error: %s", err))
