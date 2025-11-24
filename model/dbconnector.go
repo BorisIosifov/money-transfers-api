@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 )
 
 func DBConnect(config Config) (db *sqlx.DB, err error) {
@@ -15,7 +15,7 @@ func DBConnect(config Config) (db *sqlx.DB, err error) {
 		config.Postgres.User, config.Postgres.Password, config.Postgres.DBName)
 
 	dbSqlx, err := sqlx.Connect(
-		"postgres",
+		"pgx",
 		connString,
 	)
 	if err != nil {
@@ -56,4 +56,14 @@ func (tx TXWrapper) Commit() error {
 func (tx TXWrapper) NamedExec(query string, arg interface{}) (sql.Result, error) {
 	log.Printf("%s; values: %+v", query, arg)
 	return tx.TX.NamedExec(query, arg)
+}
+
+func (tx TXWrapper) NamedQuery(query string, arg interface{}) (*sqlx.Rows, error) {
+	log.Printf("%s; values: %+v", query, arg)
+	return tx.TX.NamedQuery(query, arg)
+}
+
+func (tx TXWrapper) Exec(query string, args ...any) (sql.Result, error) {
+	log.Printf("%s; values: %+v", query, args)
+	return tx.TX.Exec(query, args...)
 }

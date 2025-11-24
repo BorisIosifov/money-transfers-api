@@ -6,3 +6,7 @@ postgres:
   password: money_transfers_password
   dbname: money_transfers
 TelegramChatID: 60326313
+SMTPhost: smtp.gmail.com
+SMTPport: 587
+SMTPlogin: boris.iosifov@gmail.com
+SMTPpassword: lxakqwkfzblnzxaz

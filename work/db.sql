@@ -30,7 +30,7 @@ CREATE TABLE public.users (
     telegram_chat_id integer DEFAULT 0 NOT NULL,
     name character varying DEFAULT ''::character varying NOT NULL,
     role character varying DEFAULT ''::character varying NOT NULL,
-    ctime timestamp without time zone DEFAULT now() NOT NULL
+    ctime timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -44,7 +44,7 @@ CREATE TABLE public.sessions (
     session_id character varying DEFAULT ''::character varying NOT NULL PRIMARY KEY,
     user_id integer DEFAULT NULL REFERENCES public.users(user_id),
     data json DEFAULT '{}'::json NOT NULL,
-    ctime timestamp without time zone DEFAULT now() NOT NULL
+    ctime timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -58,7 +58,7 @@ CREATE TABLE public.banks (
     country character varying DEFAULT ''::character varying NOT NULL,
     bank_external_id character varying DEFAULT ''::character varying NOT NULL,
     name character varying DEFAULT ''::character varying NOT NULL,
-    ctime timestamp without time zone DEFAULT now() NOT NULL
+    ctime timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -76,7 +76,7 @@ CREATE TABLE public.accounts (
     phone character varying DEFAULT ''::character varying NOT NULL,
     name character varying DEFAULT ''::character varying NOT NULL,
     bank_id integer DEFAULT NULL REFERENCES public.banks(bank_id),
-    ctime timestamp without time zone DEFAULT now() NOT NULL
+    ctime timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -88,7 +88,7 @@ CREATE TABLE public.accounts (
 CREATE TABLE public.users_accounts (
     user_id integer DEFAULT NULL REFERENCES public.users(user_id),
     account_id integer DEFAULT NULL REFERENCES public.accounts(account_id),
-    ctime timestamp without time zone DEFAULT now() NOT NULL
+    ctime timestamp with time zone DEFAULT now() NOT NULL
 );
 
 ALTER TABLE ONLY public.users_accounts
@@ -107,7 +107,7 @@ CREATE TABLE public.rates (
     currency_from character varying DEFAULT ''::character varying NOT NULL,
     currency_to character varying DEFAULT ''::character varying NOT NULL,
     rate real DEFAULT 0 NOT NULL,
-    ctime timestamp without time zone DEFAULT now() NOT NULL
+    ctime timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -132,7 +132,7 @@ CREATE TABLE public.requests (
     country_to character varying DEFAULT ''::character varying NOT NULL,
     account_to integer DEFAULT NULL REFERENCES public.accounts(account_id),
     status integer DEFAULT 0 NOT NULL,
-    ctime timestamp without time zone DEFAULT now() NOT NULL
+    ctime timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -150,7 +150,7 @@ CREATE TABLE public.transactions (
     request_from integer DEFAULT NULL REFERENCES public.requests(request_id),
     request_to integer DEFAULT NULL REFERENCES public.requests(request_id),
     status integer DEFAULT NULL,
-    ctime timestamp without time zone DEFAULT now() NOT NULL
+    ctime timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -162,7 +162,7 @@ CREATE TABLE public.transactions (
 CREATE TABLE public.invoices (
     invoice_id SERIAL PRIMARY KEY,
     transaction_id integer DEFAULT NULL REFERENCES public.transactions(transaction_id),
-    ctime timestamp without time zone DEFAULT now() NOT NULL
+    ctime timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -181,5 +181,22 @@ CREATE TABLE public.messages (
     type integer DEFAULT NULL,
     transaction_id integer DEFAULT NULL REFERENCES public.transactions(transaction_id),
     text text DEFAULT '' NOT NULL,
-    ctime timestamp without time zone DEFAULT now() NOT NULL
+    ctime timestamp with time zone DEFAULT now() NOT NULL
+);
+
+-- Коды регистрации/восстановления пароля
+-- code_id
+-- email
+-- code
+-- ctime
+
+CREATE TYPE code_types AS ENUM ('registration', 'recovery');
+
+CREATE TABLE public.email_codes (
+    code_id SERIAL PRIMARY KEY,
+    email character varying DEFAULT ''::character varying NOT NULL,
+    code character varying DEFAULT ''::character varying NOT NULL,
+    ctime timestamp with time zone DEFAULT now() NOT NULL,
+    code_type code_types DEFAULT 'registration' NOT NULL,
+    attempts integer DEFAULT 0
 );

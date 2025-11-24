@@ -73,6 +73,15 @@ func (ctrl Controller) Run() {
 
 	ctrl.handleFunc(mux, "GET", "/public/rates", ctrl.GetPublicRates)
 
+	ctrl.handleFunc(mux, "POST", "/auth", ctrl.Auth)
+	ctrl.handleFunc(mux, "GET", "/auth/send_code", ctrl.SendEmailCode)
+	ctrl.handleFunc(mux, "GET", "/auth/check_code", ctrl.CheckCode)
+	ctrl.handleFunc(mux, "GET", "/auth/check_user", ctrl.CheckUser)
+	ctrl.handleFunc(mux, "POST", "/auth/register", ctrl.Register)
+	ctrl.handleFunc(mux, "GET", "/auth/send_recovery_code", ctrl.SendRecoveryCode)
+	ctrl.handleFunc(mux, "GET", "/auth/check_recovery_code", ctrl.CheckRecoveryCode)
+	ctrl.handleFunc(mux, "PUT", "/auth/change_password_by_code", ctrl.ChangePasswordByCode)
+
 	// ctrl.handleFunc(mux, "PUT", "/transport_area/:id", ctrl.PutTransportArea)
 
 	mux.Use(func(h http.Handler) http.Handler {
@@ -90,13 +99,13 @@ func (ctrl Controller) Run() {
 			ctrl.CORS(w, r)
 
 			if r.Method != "OPTIONS" {
-				sessionID, err := ctrl.ManageSession(w, r)
+				session, err := ctrl.ManageSession(w, r)
 				if err != nil {
 					w.WriteHeader(http.StatusInternalServerError)
 					ctrl.PrintError(w, r, fmt.Errorf("Internal server Error: %s", err))
 					return
 				}
-				ctx := context.WithValue(r.Context(), "SessionID", sessionID)
+				ctx := context.WithValue(r.Context(), "Session", session)
 
 				b, err := io.ReadAll(r.Body)
 				if err != nil {
@@ -104,7 +113,7 @@ func (ctrl Controller) Run() {
 					ctrl.PrintError(w, r, fmt.Errorf("Internal server Error: %s", err))
 					return
 				}
-				ctx = context.WithValue(r.Context(), "Body", b)
+				ctx = context.WithValue(ctx, "Body", b)
 
 				h.ServeHTTP(w, r.WithContext(ctx))
 			}
@@ -321,7 +330,7 @@ func (ctrl Controller) validateParams(w http.ResponseWriter, r *http.Request, pa
 
 	if len(errors) > 0 {
 		w.WriteHeader(http.StatusBadRequest)
-		ctrl.PrintError(w, r, fmt.Errorf(errors))
+		ctrl.PrintError(w, r, fmt.Errorf("%v", errors))
 		return nil, false
 	}
 

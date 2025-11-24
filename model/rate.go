@@ -2,7 +2,8 @@ package model
 
 const (
 	getRateQuery = `
-SELECT rate_id, currency_from, currency_to, rate, ctime from rates
+SELECT rate_id, currency_from, currency_to, rate, ctime
+FROM rates
 WHERE currency_from = $1 AND currency_to = $2 ORDER BY ctime DESC`
 )
 

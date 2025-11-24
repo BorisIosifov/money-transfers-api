@@ -12,6 +12,10 @@ type Config struct {
 	Port           int            `yaml:"port"`
 	Postgres       PostgresConfig `yaml:"postgres"`
 	TelegramChatID string         `yaml:"TelegramChatID"`
+	SMTPhost       string         `yaml:"SMTPhost"`
+	SMTPport       int            `yaml:"SMTPport"`
+	SMTPlogin      string         `yaml:"SMTPlogin"`
+	SMTPpassword   string         `yaml:"SMTPpassword"`
 }
 
 type PostgresConfig struct {

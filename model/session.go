@@ -3,6 +3,8 @@ package model
 const (
 	createSessionQuery = "INSERT INTO sessions (session_id, user_id, data) VALUES (:session_id, :user_id, :data)"
 
+	updateSessionQuery = "UPDATE sessions SET user_id = :user_id WHERE session_id = :session_id"
+
 	getSessionQuery = "SELECT session_id, user_id, data, ctime from sessions WHERE session_id = $1"
 )
 
@@ -16,6 +18,11 @@ type Session struct {
 
 func (session Session) Create(tx TXWrapper) error {
 	_, err := tx.NamedExec(createSessionQuery, session)
+	return err
+}
+
+func (session Session) Update(tx TXWrapper) error {
+	_, err := tx.NamedExec(updateSessionQuery, session)
 	return err
 }
 
