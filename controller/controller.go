@@ -78,6 +78,8 @@ func (ctrl Controller) Run() {
 	ctrl.handleFunc(mux, "GET", "/auth/check_code", ctrl.CheckCode)
 	ctrl.handleFunc(mux, "GET", "/auth/check_user", ctrl.CheckUser)
 	ctrl.handleFunc(mux, "POST", "/auth/register", ctrl.Register)
+	ctrl.handleFunc(mux, "GET", "/auth/logout", ctrl.Logout)
+	ctrl.handleFunc(mux, "GET", "/auth/user", ctrl.GetUser)
 	ctrl.handleFunc(mux, "GET", "/auth/send_recovery_code", ctrl.SendRecoveryCode)
 	ctrl.handleFunc(mux, "GET", "/auth/check_recovery_code", ctrl.CheckRecoveryCode)
 	ctrl.handleFunc(mux, "PUT", "/auth/change_password_by_code", ctrl.ChangePasswordByCode)

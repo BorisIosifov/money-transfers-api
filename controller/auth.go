@@ -53,7 +53,31 @@ func (ctrl Controller) Auth(w http.ResponseWriter, r *http.Request) {
 			ctrl.PrintError(w, r, fmt.Errorf("Wrong login or password"))
 			return
 		}
+		w.WriteHeader(http.StatusInternalServerError)
 		ctrl.PrintError(w, r, err)
+		return
+	}
+
+	// Starting a transaction
+	tx := ctrl.DB.MustBegin()
+	defer tx.Rollback()
+
+	// Login user
+	session := r.Context().Value("Session").(model.Session)
+	session.UserID.Valid = true
+	session.UserID.Int32 = int32(user.UserID)
+	err = session.Update(tx)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ctrl.PrintError(w, r, fmt.Errorf("Internal server error: %s", err))
+		return
+	}
+
+	// Finishing the transaction
+	err = tx.Commit()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ctrl.PrintError(w, r, fmt.Errorf("Internal server error: %s", err))
 		return
 	}
 
@@ -376,6 +400,95 @@ func (ctrl Controller) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintln(w, "{\"status\": \"ok\"}")
+}
+
+// swagger:route GET /auth/logout Auth Logout
+//
+// Logout user
+//
+//	Responses:
+//	  default: errorResult
+//	  200: successResult
+//	  400: errorResult
+//	  500: errorResult
+func (ctrl Controller) Logout(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ctrl.PrintError(w, r, fmt.Errorf("Internal server error: %s", err))
+		return
+	}
+
+	// Starting a transaction
+	tx := ctrl.DB.MustBegin()
+	defer tx.Rollback()
+
+	session := r.Context().Value("Session").(model.Session)
+	session.UserID.Valid = false
+	session.UserID.Int32 = 0
+	err = session.Update(tx)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ctrl.PrintError(w, r, fmt.Errorf("Internal server error: %s", err))
+		return
+	}
+
+	// Finishing the transaction
+	err = tx.Commit()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ctrl.PrintError(w, r, fmt.Errorf("Internal server error: %s", err))
+		return
+	}
+
+	fmt.Fprintln(w, "{\"status\": \"ok\"}")
+}
+
+// swagger:route GET /auth/user Auth GetUser
+//
+// Get user
+//
+//	Responses:
+//	  default: errorResult
+//	  200: successResult
+//	  400: errorResult
+//	  500: errorResult
+func (ctrl Controller) GetUser(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ctrl.PrintError(w, r, fmt.Errorf("Internal server error: %s", err))
+		return
+	}
+
+	var user model.User
+	session := r.Context().Value("Session").(model.Session)
+	if session.UserID.Valid {
+		user, err = model.GetUserByID(ctrl.DB, int(session.UserID.Int32))
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				w.WriteHeader(http.StatusUnauthorized)
+				ctrl.PrintError(w, r, fmt.Errorf("User not authorized"))
+				return
+			}
+			w.WriteHeader(http.StatusInternalServerError)
+			ctrl.PrintError(w, r, err)
+			return
+		}
+
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+		ctrl.PrintError(w, r, fmt.Errorf("User not authorized"))
+		return
+	}
+
+	resJSON, err := json.Marshal(user)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		ctrl.PrintError(w, r, fmt.Errorf("Internal server error: %s", err))
+		return
+	}
+	fmt.Fprintln(w, string(resJSON))
 }
 
 // swagger:route GET /auth/send_recovery_code Auth SendEmailCode

@@ -11,6 +11,11 @@ SELECT user_id, email, phone, type, external_user_id, telegram_chat_id, name, ro
 FROM users
 WHERE email = $1 AND password = $2`
 
+	getUserByID = `
+SELECT user_id, email, phone, type, external_user_id, telegram_chat_id, name, role, ctime
+FROM users
+WHERE user_id = $1`
+
 	checkExistingUser = `SELECT count(*) FROM users WHERE email = $1`
 
 	createUser = `
@@ -61,6 +66,12 @@ func GetUserByEmailAndPassword(db DBWrapper, Email, Password string) (User, erro
 	var passwordEncrypted = fmt.Sprintf("%x", []byte(Password))
 	var user User
 	err := db.Get(&user, getUser, Email, passwordEncrypted)
+	return user, err
+}
+
+func GetUserByID(db DBWrapper, UserID int) (User, error) {
+	var user User
+	err := db.Get(&user, getUserByID, UserID)
 	return user, err
 }
 
